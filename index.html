@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maze with Keys and Doors | Problem 1 Visualizer</title>
+  <meta name="description" content="Interactive visualizer and BFS solver for Maze with Keys and Doors with dynamic animations, inventory HUD, and guaranteed solvable maze generation.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗝️</text></svg>">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🗝️</div>
+      <div>
+        <h1>Maze with Keys & Doors</h1>
+      </div>
+      <div class="brand-badge">Problem 1 • BFS Bitmask</div>
+    </div>
+    <div class="header-actions">
+      <button id="btnSoundToggle" class="btn btn-secondary" title="Toggle Sound FX">🔊 Sound ON</button>
+      <button id="btnSolve" class="btn btn-primary" title="Solve Maze">⚡ Solve & Animate</button>
+    </div>
+  </header>
+
+  <!-- Main Workstation -->
+  <main>
+    <!-- Left Sidebar: Controls & Inventory -->
+    <aside class="sidebar">
+      
+      <!-- Maze Config Card -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">⚙️ Maze Setup</div>
+        </div>
+
+        <!-- Presets -->
+        <div class="form-group">
+          <label class="form-label" for="presetSelect">Load Preset</label>
+          <select id="presetSelect">
+            <option value="small">Small 7x7 (1 Key & Door)</option>
+            <option value="multikey" selected>Medium 15x15 (3 Keys & Doors)</option>
+            <option value="large">Labyrinth 21x21 (5 Keys & Doors)</option>
+            <option value="custom">Custom Configuration</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="inputT">Keys/Doors (T)</label>
+            <input type="number" id="inputT" min="1" max="6" value="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputN">Grid Size (N)</label>
+            <input type="number" id="inputN" min="7" max="41" step="2" value="15">
+          </div>
+        </div>
+
+        <button id="btnGenerate" class="btn btn-primary btn-block" style="margin-bottom: 12px;">
+          🎲 Generate Solvable Maze
+        </button>
+
+        <!-- CSV Dropzone -->
+        <div id="dropzone" class="dropzone">
+          <div class="dropzone-icon">📥</div>
+          <div class="dropzone-text"><strong>Click to upload</strong> or drag CSV here</div>
+          <div class="dropzone-hint">Option 1: Read NxN grid from CSV</div>
+          <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+        </div>
+      </section>
+
+      <!-- Key Inventory Panel (HUD) -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">🎒 Key Inventory HUD</div>
+          <span id="inventoryCounter" class="stat-chip" style="padding: 2px 8px; font-size: 0.72rem;">0 Held</span>
+        </div>
+        <div id="inventoryGrid" class="inventory-grid">
+          <!-- Dynamically populated via JS for keys a-f -->
+        </div>
+      </section>
+
+      <!-- Export Panel -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">💾 Output & Export</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button id="btnExportSolution" class="btn btn-success btn-block" title="Download CSV with 'x' marked path">
+            📄 Download Marked Solution CSV
+          </button>
+          <button id="btnExportRaw" class="btn btn-secondary btn-block" title="Download raw grid CSV">
+            📋 Download Maze Grid CSV
+          </button>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Center Stage: Canvas & Playback -->
+    <section class="stage">
+      
+      <div class="canvas-card">
+        <!-- Top Stats Bar -->
+        <div class="canvas-toolbar">
+          <div class="stats-badges">
+            <div class="stat-chip">Grid: <span id="statGridSize" class="val">15×15</span></div>
+            <div class="stat-chip">Shortest Path: <span id="statPathLen" class="val">--</span></div>
+            <div class="stat-chip">Step: <span id="statStep" class="val">0 / 0</span></div>
+            <div id="statusBadge" class="stat-chip" style="border-color: #3b82f6; color: #60a5fa;">Ready</div>
+          </div>
+          
+          <div class="legend-bar">
+            <div class="legend-item"><div class="legend-color" style="background: #ffffff; border: 1px solid #ccc;"></div>Open</div>
+            <div class="legend-item"><div class="legend-color" style="background: #18181b;"></div>Wall</div>
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div>Start (S)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div>Exit (E)</div>
+            <div class="legend-item"><span style="font-size: 13px;">🔓</span> Unlocked</div>
+          </div>
+        </div>
+
+        <!-- Canvas Display -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="mazeCanvas"></canvas>
+        </div>
+
+        <!-- Event notification banner -->
+        <div class="event-banner" id="eventBanner">
+          <div class="event-text" id="eventText">
+            <span>ℹ️</span> Load a maze or click "Solve & Animate" to begin pathfinding.
+          </div>
+          <div id="stepCoord" style="font-family: var(--font-mono); font-size: 0.8rem; color: #94a3b8;">(0, 0)</div>
+        </div>
+      </div>
+
+      <!-- Playback Deck -->
+      <div class="playback-deck">
+        <div class="playback-buttons">
+          <button id="btnReset" class="btn btn-secondary" title="Reset to start">⏮</button>
+          <button id="btnStepBack" class="btn btn-secondary" title="Step backward">◀</button>
+          <button id="btnPlay" class="btn btn-success" style="min-width: 95px;" title="Play / Pause">▶ Play</button>
+          <button id="btnStepForward" class="btn btn-secondary" title="Step forward">▶</button>
+        </div>
+
+        <!-- Timeline Scrubber -->
+        <div class="scrubber-container">
+          <span style="font-size: 0.8rem; color: #94a3b8;">Timeline:</span>
+          <input type="range" id="timelineSlider" min="0" max="0" value="0">
+        </div>
+
+        <!-- Speed Selector -->
+        <div class="speed-control">
+          <span style="font-size: 0.8rem; color: #94a3b8;">Speed:</span>
+          <select id="speedSelect" style="width: 85px; padding: 4px 6px; font-size: 0.82rem;">
+            <option value="400">0.5×</option>
+            <option value="180" selected>1×</option>
+            <option value="80">2×</option>
+            <option value="35">5×</option>
+            <option value="15">10×</option>
+          </select>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Client Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

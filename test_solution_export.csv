@@ -1,0 +1,5 @@
+flight_id,u,v,price,on_path,coupon_used,actual_cost
+1,1,2,150,,,
+2,2,3,250,,,
+3,3,4,350,,,
+4,1,4,900,x,yes,450
