@@ -53,3 +53,39 @@ java BudgetTraveller
 ### Outputs:
 - **Output 1**: Minimum total cost (single integer) or `-1`.
 - **Output 2**: `budget_traveller_solution.csv` containing all graph edges with path marked `'x'`, whether a coupon was applied (`yes`/`no`), and actual paid cost.
+
+---
+
+## 🎨 Interactive Graph Visualizer (Web & Desktop)
+
+### 1. Modern Web Visualizer
+Open `index.html` in any browser or launch:
+```bash
+python traveller_solver.py --web
+# or on Windows
+start index.html
+```
+
+#### Visual Features:
+- **Graph Topology**: Cities as circular nodes ($1 \dots N$) with directed, weighted flight edges.
+- **Node Color Coding**:
+  - **Start City (1)**: Vibrant **Green** with glowing pulse ring and `START • CITY 1` badge.
+  - **Destination City ($N$)**: Vibrant **Red** with glowing pulse ring and `DEST • CITY N` badge.
+  - **Intermediate Stops**: Marked in **Orange** with `STOP` badge along the optimal route.
+- **Chosen Path Highlighting**: Optimal flight sequence highlighted in glowing cyan.
+- **Coupon Applied Effect**:
+  - Flight edge turns **Radiant Gold** (`#FFD700`) with glowing aura and golden ticket badge.
+  - Price dynamically displays original price crossed out $\to$ discounted price: `~~$618~~ ➔ $309` (`50% OFF`).
+- **Animated Journey**:
+  - Airplane avatar (`✈️`) flies smoothly along each flight hop.
+  - **Real-Time Running Cost HUD**: Smooth odometer counter updates as the traveller progresses.
+  - **Live Stops & Coupons Counter**: Tracks stops used ($\le K$) and coupons applied ($\le C$).
+  - **Interactive Playback**: Play, Pause, Step Forward/Back, Reset, Timeline Scrubber, Speed controls.
+  - **Interactive Graph Canvas**: Drag & drop any city node to customize layout, plus auto-layout modes (Circle, Layered Flow).
+
+### 2. Native Desktop GUI (Tkinter)
+Launch the standalone native Python desktop visualizer:
+```bash
+python traveller_gui.py
+```
+

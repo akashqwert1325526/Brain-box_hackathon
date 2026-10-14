@@ -3,29 +3,256 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maze with Keys and Doors | Problem 1 Visualizer</title>
-  <meta name="description" content="Interactive visualizer and BFS solver for Maze with Keys and Doors with dynamic animations, inventory HUD, and guaranteed solvable maze generation.">
+  <title>DSA Problem Visualizer Suite | Maze Bitmask & Budget Traveller</title>
+  <meta name="description" content="Interactive visualizers for DSA challenges: Problem 1 Maze with Keys & Doors (BFS Bitmask) and Problem 3 Budget Traveller with Coupons (Multi-dimensional Dijkstra).">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗝️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
 </head>
 <body>
   <!-- Header -->
   <header>
     <div class="brand">
-      <div class="brand-icon">🗝️</div>
+      <div id="headerBrandIcon" class="brand-icon">✈️</div>
       <div>
-        <h1>Maze with Keys & Doors</h1>
+        <h1 id="headerTitle">Budget Traveller with Coupons</h1>
       </div>
-      <div class="brand-badge">Problem 1 • BFS Bitmask</div>
+      <div id="headerBadge" class="brand-badge">Problem 3 • Multi-State Dijkstra</div>
     </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button id="tabBtnTraveller" class="nav-tab active">
+        <span>✈️</span> Problem 3: Budget Traveller
+        <span class="tab-badge">GRAPH</span>
+      </button>
+      <button id="tabBtnMaze" class="nav-tab">
+        <span>🗝️</span> Problem 1: Maze Runner
+        <span class="tab-badge">BFS</span>
+      </button>
+    </nav>
+
     <div class="header-actions">
       <button id="btnSoundToggle" class="btn btn-secondary" title="Toggle Sound FX">🔊 Sound ON</button>
-      <button id="btnSolve" class="btn btn-primary" title="Solve Maze">⚡ Solve & Animate</button>
+      <button id="btnSolve" class="btn btn-primary" title="Solve & Animate">⚡ Solve & Animate</button>
     </div>
   </header>
 
-  <!-- Main Workstation -->
-  <main>
+  <!-- ============================================================== -->
+  <!-- TAB 1: PROBLEM 3 - BUDGET TRAVELLER WITH COUPONS WORKSTATION   -->
+  <!-- ============================================================== -->
+  <main id="viewTraveller" class="tab-content active">
+    <!-- Left Sidebar: Controls & HUD -->
+    <aside class="sidebar">
+      
+      <!-- Network Config Card -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">⚙️ Flight Network Setup</div>
+        </div>
+
+        <!-- Presets -->
+        <div class="form-group">
+          <label class="form-label" for="travellerPresetSelect">Load Preset</label>
+          <select id="travellerPresetSelect">
+            <option value="generated5" selected>Java Generated 5 Cities (K=2, C=1, 50% Coupon)</option>
+            <option value="standard4">Standard 4 Cities (K=1, C=1, Optimal $300)</option>
+            <option value="sample5">Sample 5 Cities (sample_flights.csv, K=2, C=1)</option>
+            <option value="complex8">Complex Route Hub 8 Cities (K=3, C=2)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="travellerInputN">Cities (N)</label>
+            <input type="number" id="travellerInputN" min="2" max="25" value="5">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="travellerInputK">Max Stops (K)</label>
+            <input type="number" id="travellerInputK" min="0" max="15" value="2">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="travellerInputC">Coupons (C) <span style="color: #fbbf24; font-size: 0.75rem;">(50% off per coupon)</span></label>
+          <input type="number" id="travellerInputC" min="0" max="10" value="1">
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <button id="btnTravellerGenerate" class="btn btn-secondary btn-block" style="flex: 1;" title="Generate solvable random flight graph">
+            🎲 Random Network
+          </button>
+          <button id="btnTravellerSolve" class="btn btn-primary btn-block" style="flex: 1.2;" title="Solve shortest path using Dijkstra">
+            ⚡ Solve & Find Route
+          </button>
+        </div>
+
+        <!-- CSV Dropzone -->
+        <div id="travellerDropzone" class="dropzone">
+          <div class="dropzone-icon">📥</div>
+          <div class="dropzone-text"><strong>Click to upload</strong> or drag flights CSV</div>
+          <div class="dropzone-hint">Supports u,v,price or budget_traveller_solution.csv</div>
+          <input type="file" id="travellerCsvFileInput" accept=".csv" style="display: none;">
+        </div>
+      </section>
+
+      <!-- Active Journey HUD Card -->
+      <section class="cost-hud-card">
+        <div class="panel-header" style="margin-bottom: 4px;">
+          <div class="panel-title" style="color: #cbd5e1;">🎫 Journey Tracker HUD</div>
+          <span class="coupon-ticket-badge pulse">🏷️ 50% COUPONS</span>
+        </div>
+
+        <div class="cost-display">
+          <span class="cost-currency">Running Cost:</span>
+          <div id="travellerCostAmount" class="cost-amount">$0</div>
+        </div>
+
+        <div class="traveller-stats-grid">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Stops Used (≤ K)</div>
+            <div id="travellerStopsVal" class="mini-stat-val">0 / 2</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Coupons Used (≤ C)</div>
+            <div id="travellerCouponsVal" class="mini-stat-val">0 / 1</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Money Saved</div>
+            <div id="travellerSavingsVal" class="mini-stat-val" style="color: #fbbf24;">$0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Optimal Cost</div>
+            <div id="travellerOptimalCostBadge" class="mini-stat-val" style="color: #38bdf8;">$--</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Flight Connections & Quick Add -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">✈️ Flights in Network</div>
+        </div>
+
+        <!-- Add flight row -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr auto; gap: 6px; margin-bottom: 10px;">
+          <input type="number" id="inputFlightU" placeholder="From (u)" min="1" max="25" value="1" title="Origin city">
+          <input type="number" id="inputFlightV" placeholder="To (v)" min="1" max="25" value="2" title="Destination city">
+          <input type="number" id="inputFlightPrice" placeholder="Price $" min="1" value="250" title="Ticket price">
+          <button id="btnTravellerAddFlight" class="btn btn-secondary" style="padding: 0 10px;" title="Add flight">+</button>
+        </div>
+
+        <div id="travellerFlightList" class="flight-list-scroll">
+          <!-- Dynamically populated flight rows -->
+        </div>
+      </section>
+
+      <!-- Export Panel -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">💾 Output & Export</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button id="btnTravellerExportSolution" class="btn btn-success btn-block" title="Download CSV with 'x' marked path and coupon halving">
+            📄 Download Marked Solution CSV
+          </button>
+          <button id="btnTravellerExportRaw" class="btn btn-secondary btn-block" title="Download raw flights CSV">
+            📋 Download Flights CSV
+          </button>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Center Stage: Canvas & Playback -->
+    <section class="stage">
+      
+      <div class="canvas-card">
+        <!-- Top Stats Bar -->
+        <div class="canvas-toolbar">
+          <div class="stats-badges">
+            <div class="stat-chip">Start: <span class="val" style="color: #10b981;">City 1</span></div>
+            <div class="stat-chip">Dest: <span class="val" style="color: #ef4444;">City N</span></div>
+            <div id="travellerStatusBadge" class="stat-chip" style="border-color: #3b82f6; color: #60a5fa;">Ready</div>
+          </div>
+
+          <!-- Layout Buttons -->
+          <div class="layout-btn-group">
+            <span style="font-size: 0.75rem; color: #94a3b8; align-self: center;">Layout:</span>
+            <button class="btn-icon-sm btn-layout" data-layout="circle" title="Circular Graph Layout">⭕ Circle</button>
+            <button class="btn-icon-sm btn-layout" data-layout="layered" title="Layered Left-to-Right Layout">➔ Flow</button>
+          </div>
+          
+          <div class="legend-bar">
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div>Start (City 1)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div>Dest (City N)</div>
+            <div class="legend-item"><div class="legend-color" style="background: #f97316;"></div>Intermediate Stop</div>
+            <div class="legend-item"><div class="legend-color" style="background: #38bdf8;"></div>Chosen Path</div>
+            <div class="legend-item"><div class="legend-color" style="background: #ffd700; box-shadow: 0 0 6px #ffd700;"></div>🎟️ 50% Coupon Flight</div>
+          </div>
+        </div>
+
+        <!-- Canvas Display -->
+        <div class="canvas-wrapper" style="position: relative; min-height: 480px; height: 520px;">
+          <canvas id="travellerCanvas"></canvas>
+          <div style="position: absolute; bottom: 10px; right: 14px; font-size: 0.72rem; color: rgba(255,255,255,0.4); pointer-events: none;">
+            💡 Tip: Drag & drop any city node to customize layout
+          </div>
+        </div>
+
+        <!-- Event notification banner -->
+        <div class="event-banner" id="travellerEventBanner">
+          <div class="event-text" id="travellerEventText">
+            🛫 Load a flight network or click "Solve & Animate" to begin journey pathfinding.
+          </div>
+          <div id="travellerStepBadge" style="font-family: var(--font-mono); font-size: 0.8rem; color: #94a3b8;">0 / 0</div>
+        </div>
+      </div>
+
+      <!-- Playback Deck -->
+      <div class="playback-deck">
+        <div class="playback-buttons">
+          <button id="btnTravellerReset" class="btn btn-secondary" title="Reset to start">⏮</button>
+          <button id="btnTravellerStepBack" class="btn btn-secondary" title="Step backward">◀</button>
+          <button id="btnTravellerPlay" class="btn btn-success" style="min-width: 95px;" title="Play / Pause">▶ Play</button>
+          <button id="btnTravellerStepForward" class="btn btn-secondary" title="Step forward">▶</button>
+        </div>
+
+        <!-- Timeline Scrubber -->
+        <div class="scrubber-container">
+          <span style="font-size: 0.8rem; color: #94a3b8;">Timeline:</span>
+          <input type="range" id="travellerTimelineSlider" min="0" max="0" value="0">
+        </div>
+
+        <!-- Speed Selector -->
+        <div class="speed-control">
+          <span style="font-size: 0.8rem; color: #94a3b8;">Speed:</span>
+          <select id="travellerSpeedSelect" style="width: 85px; padding: 4px 6px; font-size: 0.82rem;">
+            <option value="2000">0.5×</option>
+            <option value="1200" selected>1×</option>
+            <option value="600">2×</option>
+            <option value="300">4×</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Path Breakdown Timeline Card -->
+      <div class="glass-panel" style="margin-top: 1rem; padding: 1rem;">
+        <div class="panel-header" style="margin-bottom: 0.5rem;">
+          <div class="panel-title" style="font-size: 0.88rem;">📋 Optimal Path Flight Breakdown</div>
+          <span style="font-size: 0.75rem; color: #94a3b8;">Active Flight Path sequence</span>
+        </div>
+        <div id="journeyTimelineList" class="journey-timeline-list">
+          <!-- Dynamically populated journey hops -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- TAB 2: PROBLEM 1 - MAZE WITH KEYS & DOORS WORKSTATION          -->
+  <!-- ============================================================== -->
+  <main id="viewMaze" class="tab-content">
     <!-- Left Sidebar: Controls & Inventory -->
     <aside class="sidebar">
       
@@ -167,7 +394,68 @@
 
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Client Application Logic -->
+  <!-- Tab Switcher Controller & Global Solve Delegation -->
+  <script>
+    (function() {
+      let activeTab = 'traveller';
+
+      const tabTraveller = document.getElementById('tabBtnTraveller');
+      const tabMaze = document.getElementById('tabBtnMaze');
+      const viewTraveller = document.getElementById('viewTraveller');
+      const viewMaze = document.getElementById('viewMaze');
+      const headerTitle = document.getElementById('headerTitle');
+      const headerBadge = document.getElementById('headerBadge');
+      const headerIcon = document.getElementById('headerBrandIcon');
+      const btnGlobalSolve = document.getElementById('btnGlobalSolve');
+      const btnTravellerSolve = document.getElementById('btnTravellerSolve');
+
+      function switchTab(tab) {
+        activeTab = tab;
+        if (tab === 'traveller') {
+          tabTraveller.classList.add('active');
+          tabMaze.classList.remove('active');
+          viewTraveller.classList.add('active');
+          viewMaze.classList.remove('active');
+          headerTitle.textContent = "Budget Traveller with Coupons";
+          headerBadge.textContent = "Problem 3 • Multi-State Dijkstra";
+          headerIcon.textContent = "✈️";
+          // Trigger canvas resize and render
+          window.dispatchEvent(new Event('resize'));
+        } else {
+          tabMaze.classList.add('active');
+          tabTraveller.classList.remove('active');
+          viewMaze.classList.add('active');
+          viewTraveller.classList.remove('active');
+          headerTitle.textContent = "Maze with Keys & Doors";
+          headerBadge.textContent = "Problem 1 • BFS Bitmask";
+          headerIcon.textContent = "🗝️";
+          window.dispatchEvent(new Event('resize'));
+        }
+      }
+
+      tabTraveller.addEventListener('click', () => switchTab('traveller'));
+      tabMaze.addEventListener('click', () => switchTab('maze'));
+
+      // Header Solve button delegates to active tab
+      const btnSolve = document.getElementById('btnSolve');
+      btnSolve.addEventListener('click', (e) => {
+        if (activeTab === 'traveller') {
+          e.stopImmediatePropagation();
+          if (window.travellerApp) window.travellerApp.solve();
+        }
+      }, true);
+
+      if (btnTravellerSolve) {
+        btnTravellerSolve.addEventListener('click', () => {
+          if (window.travellerApp) window.travellerApp.solve();
+        });
+      }
+    })();
+  </script>
+
+  <!-- Problem 1 Maze Logic -->
   <script src="app.js"></script>
+  <!-- Problem 3 Budget Traveller Logic -->
+  <script src="traveller.js"></script>
 </body>
 </html>

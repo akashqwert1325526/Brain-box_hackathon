@@ -103,7 +103,10 @@ Both the native GUI and the modern web application adhere to all visual guidelin
 | `index.html` | Modern responsive Web Visualizer UI with glassmorphism |
 | `styles.css` | Design system, animations, dark mode, and HUD layout |
 | `app.js` | Client-side BFS solver, canvas renderer, and Web Audio synthesizer |
-| `test_maze.py` | Unit tests for solver, edge cases, and random maze generation |
-| `sample_maze_small.csv` | 7x7 sample maze with 1 key and 1 door |
-| `sample_maze_multikey.csv` | 15x15 sample maze with 3 keys and 3 doors |
-| `sample_maze_large.csv` | 21x21 sample labyrinth with 5 keys and 5 doors |
+| `traveller.js` | Web interactive graph visualizer & multi-state Dijkstra engine |
+| `traveller_solver.py` | Python CLI & solver for Problem 3 with CSV export & launchers |
+| `traveller_gui.py` | Native Tkinter desktop graph visualizer for Problem 3 |
+| `BudgetTraveller.java` | Java core solver and CLI for Problem 3 |
+| `README_PROBLEM3.md` | Problem 3 specification, algorithm, and visualizer guide |
+| `sample_flights.csv` | Sample flights network dataset |
+| `generated_flights.csv` | Solvable 5-city flights network demonstrating coupon halving |
